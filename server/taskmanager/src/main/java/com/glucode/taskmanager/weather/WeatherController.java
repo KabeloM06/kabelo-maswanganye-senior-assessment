@@ -27,10 +27,11 @@ public class WeatherController {
     @GetMapping
     @Operation(summary = "Get current weather and sunrise/sunset for coordinates")
     public WeatherResponse getWeather(
-            @RequestParam double latitude,
-            @RequestParam double longitude) {
+            @RequestParam(required = false) double latitude,
+            @RequestParam(required = false) double longitude,
+            @RequestParam(required = false) String location) {
 
-        return weatherService.getWeather(latitude, longitude);
+        return weatherService.getWeather(latitude, longitude, location);
     }
 
     @GetMapping("/search")

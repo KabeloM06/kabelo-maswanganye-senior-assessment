@@ -51,6 +51,26 @@ public class WeatherApiClient {
         }
     }
 
+    public WeatherApiForecastResponse getForecast(String location) {
+
+        try {
+            return restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/forecast.json")
+                            .queryParam("key", properties.key())
+                            .queryParam("q", location)
+                            .queryParam("days", 1)
+                            .build())
+                    .retrieve()
+                    .body(WeatherApiForecastResponse.class);
+
+        } catch (RestClientException exception) {
+            throw new WeatherApiException(
+                    "Unable to retrieve weather information.",
+                    exception);
+        }
+    }
+
     public List<WeatherApiLocationResponse> searchLocations(String query) {
 
         try {

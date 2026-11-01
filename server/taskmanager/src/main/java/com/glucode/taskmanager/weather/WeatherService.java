@@ -12,40 +12,66 @@ import java.util.List;
 @Service
 public class WeatherService {
 
+    private static final double DEFAULT_LATITUDE = -25.7479;
+    private static final double DEFAULT_LONGITUDE = 28.2293;
+    private static final String DEFAULT_LOCATION = "Pretoria";
+
     private final WeatherApiClient weatherApiClient;
 
     public WeatherService(WeatherApiClient weatherApiClient) {
         this.weatherApiClient = weatherApiClient;
     }
 
-    public WeatherResponse getWeather(double latitude, double longitude) {
+    public WeatherResponse getWeather(
+            Double latitude,
+            Double longitude,
+            String location) {
 
-        if (latitude < -90 || latitude > 90) {
+        // Coordinates must be supplied together.
+        if ((latitude == null) != (longitude == null)) {
             throw new IllegalArgumentException(
-                    "Latitude must be between -90 and 90.");
+                    "Latitude and longitude must be supplied together.");
         }
 
-        if (longitude < -180 || longitude > 180) {
+        // Do not accept coordinates and a city simultaneously.
+        if (latitude != null && location != null && !location.isBlank()) {
             throw new IllegalArgumentException(
-                    "Longitude must be between -180 and 180.");
+                    "Provide either coordinates or a location, not both.");
         }
 
-        WeatherApiForecastResponse forecast = weatherApiClient.getForecast(latitude, longitude);
+        WeatherApiForecastResponse forecast;
 
-        WeatherApiForecastResponse.Location location = forecast.location();
+        if (latitude != null) {
+            validateCoordinates(latitude, longitude);
+            forecast = weatherApiClient.getForecast(latitude, longitude);
 
-        WeatherApiForecastResponse.ForecastDay forecastDay = forecast.forecast().forecastDays().get(0);
+        } else if (location != null && !location.isBlank()) {
+            forecast = weatherApiClient.getForecast(location.trim());
 
-        WeatherApiForecastResponse.Astro astronomy = forecastDay.astro();
+        } else {
+            forecast = weatherApiClient.getForecast(
+                    DEFAULT_LATITUDE,
+                    DEFAULT_LONGITUDE);
+        }
+
+        WeatherApiForecastResponse.Location weatherLocation =
+                forecast.location();
+
+        WeatherApiForecastResponse.ForecastDay forecastDay =
+                forecast.forecast().forecastDays().get(0);
+
+        WeatherApiForecastResponse.Astro astronomy =
+                forecastDay.astro();
 
         return new WeatherResponse(
-                location.name(),
-                location.region(),
-                location.country(),
+                weatherLocation.name(),
+                weatherLocation.region(),
+                weatherLocation.country(),
                 forecast.current().temperatureCelsius(),
                 astronomy.sunrise(),
                 astronomy.sunset(),
-                location.localtime());
+                weatherLocation.localtime()
+        );
     }
 
     public List<WeatherLocationResponse> searchLocations(String query) {
@@ -66,6 +92,19 @@ public class WeatherService {
                 .toList();
     }
 
+    private void validateCoordinates(double latitude, double longitude) {
+
+        if (latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException(
+                    "Latitude must be between -90 and 90.");
+        }
+
+        if (longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException(
+                    "Longitude must be between -180 and 180.");
+        }
+    }
+
     private WeatherLocationResponse toLocationResponse(
             WeatherApiLocationResponse location) {
 
@@ -74,6 +113,7 @@ public class WeatherService {
                 location.region(),
                 location.country(),
                 location.lat(),
-                location.lon());
+                location.lon()
+        );
     }
 }
