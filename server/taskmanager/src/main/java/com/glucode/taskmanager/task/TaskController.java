@@ -33,7 +33,7 @@ public class TaskController {
     public TaskResponse createTask(
             @Valid @RequestBody CreateTaskRequest request
     ) {
-        Task task = taskService.createTask(request.title());
+        Task task = taskService.createTask(request.title(), request.description());
         return TaskResponse.from(task);
     }
 

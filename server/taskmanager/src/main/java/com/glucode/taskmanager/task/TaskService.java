@@ -20,23 +20,28 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-    public Task createTask(String title) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Task title cannot be empty.");
-        }
-
-        String trimmedTitle = title.trim();
-
-        if (trimmedTitle.length() > 200) {
-            throw new IllegalArgumentException(
-                    "Task title cannot exceed 200 characters."
-            );
-        }
-
-        Task task = new Task(trimmedTitle);
-
-        return taskRepository.save(task);
+public Task createTask(String title, String description) {
+    if (title == null || title.isBlank()) {
+        throw new IllegalArgumentException("Task title cannot be empty.");
     }
+
+    String trimmedTitle = title.trim();
+
+    if (trimmedTitle.length() > 200) {
+        throw new IllegalArgumentException(
+            "Task title cannot exceed 200 characters."
+        );
+    }
+
+    if (description != null && description.length() > 2000) {
+        throw new IllegalArgumentException(
+            "Task description cannot exceed 2000 characters."
+        );
+    }
+
+    Task task = new Task(trimmedTitle, description);
+    return taskRepository.save(task);
+}
 
     public Task updateTaskCompletion(Long id, boolean completed) {
         Task task = taskRepository.findById(id)

@@ -14,6 +14,9 @@ public class Task {
     @Column(nullable = false, length = 200)
     private String title;
 
+    @Column(length = 2000)
+    private String description;
+
     @Column(nullable = false)
     private boolean completed = false;
 
@@ -21,11 +24,11 @@ public class Task {
     private Instant createdAt;
 
     protected Task() {
-        // Required by JPA
     }
 
-    public Task(String title) {
+    public Task(String title, String description) {
         this.title = title;
+        this.description = description;
         this.completed = false;
         this.createdAt = Instant.now();
     }
@@ -40,6 +43,14 @@ public class Task {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public boolean isCompleted() {
