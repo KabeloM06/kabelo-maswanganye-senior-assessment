@@ -32,21 +32,20 @@ class TaskControllerTest {
     @Test
     void getAllTasks_returnsTasks() throws Exception {
         Task task = new Task(
-            "Complete assessment",
-            "Finish the technical assessment."
-        );
+                "Complete assessment",
+                "Finish the technical assessment.");
 
         when(taskService.getAllTasks())
-            .thenReturn(List.of(task));
+                .thenReturn(List.of(task));
 
         mockMvc.perform(get("/api/tasks"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].title")
-                .value("Complete assessment"))
-            .andExpect(jsonPath("$[0].description")
-                .value("Finish the technical assessment."))
-            .andExpect(jsonPath("$[0].completed")
-                .value(false));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title")
+                        .value("Complete assessment"))
+                .andExpect(jsonPath("$[0].description")
+                        .value("Finish the technical assessment."))
+                .andExpect(jsonPath("$[0].completed")
+                        .value(false));
 
         verify(taskService).getAllTasks();
     }
@@ -54,35 +53,32 @@ class TaskControllerTest {
     @Test
     void createTask_withValidRequest_returnsCreated() throws Exception {
         Task task = new Task(
-            "Buy groceries",
-            "Buy groceries for the week."
-        );
+                "Buy groceries",
+                "Buy groceries for the week.");
 
         when(taskService.createTask(
-            "Buy groceries",
-            "Buy groceries for the week."
-        )).thenReturn(task);
+                "Buy groceries",
+                "Buy groceries for the week.")).thenReturn(task);
 
         mockMvc.perform(post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {
-                        "title": "Buy groceries",
-                        "description": "Buy groceries for the week."
-                    }
-                    """))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.title")
-                .value("Buy groceries"))
-            .andExpect(jsonPath("$.description")
-                .value("Buy groceries for the week."))
-            .andExpect(jsonPath("$.completed")
-                .value(false));
+                        {
+                            "title": "Buy groceries",
+                            "description": "Buy groceries for the week."
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title")
+                        .value("Buy groceries"))
+                .andExpect(jsonPath("$.description")
+                        .value("Buy groceries for the week."))
+                .andExpect(jsonPath("$.completed")
+                        .value(false));
 
         verify(taskService).createTask(
-            "Buy groceries",
-            "Buy groceries for the week."
-        );
+                "Buy groceries",
+                "Buy groceries for the week.");
     }
 
     @Test
@@ -90,12 +86,12 @@ class TaskControllerTest {
         mockMvc.perform(post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {
-                        "title": "   ",
-                        "description": "Some description."
-                    }
-                    """))
-            .andExpect(status().isBadRequest());
+                        {
+                            "title": "   ",
+                            "description": "Some description."
+                        }
+                        """))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(taskService);
     }
@@ -109,12 +105,12 @@ class TaskControllerTest {
         mockMvc.perform(post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {
-                        "title": "%s",
-                        "description": "Some description."
-                    }
-                    """.formatted(longTitle)))
-            .andExpect(status().isBadRequest());
+                        {
+                            "title": "%s",
+                            "description": "Some description."
+                        }
+                        """.formatted(longTitle)))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(taskService);
     }
@@ -128,12 +124,12 @@ class TaskControllerTest {
         mockMvc.perform(post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {
-                        "title": "Buy groceries",
-                        "description": "%s"
-                    }
-                    """.formatted(longDescription)))
-            .andExpect(status().isBadRequest());
+                        {
+                            "title": "Buy groceries",
+                            "description": "%s"
+                        }
+                        """.formatted(longDescription)))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(taskService);
     }
@@ -143,20 +139,20 @@ class TaskControllerTest {
         Task task = new Task("Buy groceries", null);
 
         when(taskService.createTask("Buy groceries", null))
-            .thenReturn(task);
+                .thenReturn(task);
 
         mockMvc.perform(post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                    {
-                        "title": "Buy groceries"
-                    }
-                    """))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.title")
-                .value("Buy groceries"))
-            .andExpect(jsonPath("$.description")
-                .doesNotExist());
+                        {
+                            "title": "Buy groceries"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title")
+                        .value("Buy groceries"))
+                .andExpect(jsonPath("$.description")
+                        .doesNotExist());
 
         verify(taskService).createTask("Buy groceries", null);
     }
@@ -166,18 +162,22 @@ class TaskControllerTest {
             throws Exception {
 
         Task task = new Task(
-            "Complete assessment",
-            "Finish the technical assessment."
-        );
+                "Complete assessment",
+                "Finish the technical assessment.");
         task.setCompleted(true);
 
         when(taskService.updateTaskCompletion(1L, true))
-            .thenReturn(task);
+                .thenReturn(task);
 
         mockMvc.perform(patch("/api/tasks/1/completion")
-                .param("completed", "true"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.completed").value(true));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "completed": true
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").value(true));
 
         verify(taskService).updateTaskCompletion(1L, true);
     }
@@ -187,11 +187,16 @@ class TaskControllerTest {
             throws Exception {
 
         when(taskService.updateTaskCompletion(999L, true))
-            .thenThrow(new TaskNotFoundException(999L));
+                .thenThrow(new TaskNotFoundException(999L));
 
         mockMvc.perform(patch("/api/tasks/999/completion")
-                .param("completed", "true"))
-            .andExpect(status().isNotFound());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "completed": true
+                        }
+                        """))
+                .andExpect(status().isNotFound());
 
         verify(taskService).updateTaskCompletion(999L, true);
     }
@@ -203,7 +208,7 @@ class TaskControllerTest {
         doNothing().when(taskService).deleteTask(1L);
 
         mockMvc.perform(delete("/api/tasks/1"))
-            .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent());
 
         verify(taskService).deleteTask(1L);
     }
@@ -213,10 +218,10 @@ class TaskControllerTest {
             throws Exception {
 
         doThrow(new TaskNotFoundException(999L))
-            .when(taskService).deleteTask(999L);
+                .when(taskService).deleteTask(999L);
 
         mockMvc.perform(delete("/api/tasks/999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
 
         verify(taskService).deleteTask(999L);
     }

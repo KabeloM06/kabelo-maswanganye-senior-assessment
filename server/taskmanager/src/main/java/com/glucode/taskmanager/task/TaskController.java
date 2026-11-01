@@ -2,6 +2,7 @@ package com.glucode.taskmanager.task;
 
 import com.glucode.taskmanager.task.dto.CreateTaskRequest;
 import com.glucode.taskmanager.task.dto.TaskResponse;
+import com.glucode.taskmanager.task.dto.UpdateTaskCompletionRequest;
 
 import jakarta.validation.Valid;
 
@@ -31,8 +32,7 @@ public class TaskController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponse createTask(
-            @Valid @RequestBody CreateTaskRequest request
-    ) {
+            @Valid @RequestBody CreateTaskRequest request) {
         Task task = taskService.createTask(request.title(), request.description());
         return TaskResponse.from(task);
     }
@@ -40,9 +40,11 @@ public class TaskController {
     @PatchMapping("/{id}/completion")
     public TaskResponse updateTaskCompletion(
             @PathVariable Long id,
-            @RequestParam boolean completed
-    ) {
-        Task task = taskService.updateTaskCompletion(id, completed);
+            @RequestBody UpdateTaskCompletionRequest request) {
+        Task task = taskService.updateTaskCompletion(
+                id,
+                request.completed());
+
         return TaskResponse.from(task);
     }
 
