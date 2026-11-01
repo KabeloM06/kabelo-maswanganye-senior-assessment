@@ -18,6 +18,8 @@ import static org.mockito.Mockito.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @WebMvcTest(TaskController.class)
 @Import(GlobalExceptionHandler.class)
@@ -225,4 +227,25 @@ class TaskControllerTest {
 
         verify(taskService).deleteTask(999L);
     }
+
+    @Test
+    void cors_withAngularOrigin_allowsPreflightRequest() throws Exception {
+
+        mockMvc.perform(options("/api/tasks")
+                .header(HttpHeaders.ORIGIN, "http://localhost:4200")
+                .header(
+                        HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD,
+                        "POST")
+                .header(
+                        HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+                        "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+                        "http://localhost:4200"))
+                .andExpect(header().string(
+                        HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
+                        org.hamcrest.Matchers.containsString("POST")));
+    }
+
 }
