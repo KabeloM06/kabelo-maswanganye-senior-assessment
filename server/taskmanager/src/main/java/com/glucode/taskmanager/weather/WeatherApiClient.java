@@ -7,6 +7,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import org.springframework.web.client.RestClientException;
+
 import java.util.List;
 
 @Component
@@ -31,27 +33,41 @@ public class WeatherApiClient {
 
         String coordinates = latitude + "," + longitude;
 
-        return restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/forecast.json")
-                        .queryParam("key", properties.key())
-                        .queryParam("q", coordinates)
-                        .queryParam("days", 1)
-                        .build())
-                .retrieve()
-                .body(WeatherApiForecastResponse.class);
+        try {
+            return restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/forecast.json")
+                            .queryParam("key", properties.key())
+                            .queryParam("q", coordinates)
+                            .queryParam("days", 1)
+                            .build())
+                    .retrieve()
+                    .body(WeatherApiForecastResponse.class);
+
+        } catch (RestClientException exception) {
+            throw new WeatherApiException(
+                    "Unable to retrieve weather information.",
+                    exception);
+        }
     }
 
     public List<WeatherApiLocationResponse> searchLocations(String query) {
 
-        return restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/search.json")
-                        .queryParam("key", properties.key())
-                        .queryParam("q", query)
-                        .build())
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+        try {
+            return restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/search.json")
+                            .queryParam("key", properties.key())
+                            .queryParam("q", query)
+                            .build())
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {
+                    });
+
+        } catch (RestClientException exception) {
+            throw new WeatherApiException(
+                    "Unable to search for locations.",
+                    exception);
+        }
     }
 }

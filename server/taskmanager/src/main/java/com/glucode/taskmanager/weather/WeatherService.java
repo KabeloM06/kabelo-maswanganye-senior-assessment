@@ -20,13 +20,21 @@ public class WeatherService {
 
     public WeatherResponse getWeather(double latitude, double longitude) {
 
-        WeatherApiForecastResponse forecast =
-                weatherApiClient.getForecast(latitude, longitude);
+        if (latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException(
+                    "Latitude must be between -90 and 90.");
+        }
+
+        if (longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException(
+                    "Longitude must be between -180 and 180.");
+        }
+
+        WeatherApiForecastResponse forecast = weatherApiClient.getForecast(latitude, longitude);
 
         WeatherApiForecastResponse.Location location = forecast.location();
 
-        WeatherApiForecastResponse.ForecastDay forecastDay =
-                forecast.forecast().forecastDays().get(0);
+        WeatherApiForecastResponse.ForecastDay forecastDay = forecast.forecast().forecastDays().get(0);
 
         WeatherApiForecastResponse.Astro astronomy = forecastDay.astro();
 
@@ -37,13 +45,22 @@ public class WeatherService {
                 forecast.current().temperatureCelsius(),
                 astronomy.sunrise(),
                 astronomy.sunset(),
-                location.localtime()
-        );
+                location.localtime());
     }
 
     public List<WeatherLocationResponse> searchLocations(String query) {
 
-        return weatherApiClient.searchLocations(query)
+        if (query == null || query.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Search query must not be blank.");
+        }
+
+        if (query.length() > 100) {
+            throw new IllegalArgumentException(
+                    "Search query must not exceed 100 characters.");
+        }
+
+        return weatherApiClient.searchLocations(query.trim())
                 .stream()
                 .map(this::toLocationResponse)
                 .toList();
@@ -57,7 +74,6 @@ public class WeatherService {
                 location.region(),
                 location.country(),
                 location.lat(),
-                location.lon()
-        );
+                location.lon());
     }
 }
