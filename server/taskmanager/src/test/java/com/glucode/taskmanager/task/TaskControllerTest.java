@@ -248,4 +248,26 @@ class TaskControllerTest {
                         org.hamcrest.Matchers.containsString("POST")));
     }
 
+    @Test
+    void createTask_withMalformedJson_returnsBadRequest() throws Exception {
+
+        mockMvc.perform(post("/api/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "title": "Buy groceries",
+                            "description":
+                        """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void unsupportedHttpMethod_returnsMethodNotAllowed() throws Exception {
+
+        mockMvc.perform(put("/api/tasks"))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
 }
