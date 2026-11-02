@@ -1,0 +1,162 @@
+
+<div class="task-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">WORKSPACE</p>
+      <h1>My Tasks</h1>
+      <p class="page-description">
+        Keep track of your work and stay focused on what matters.
+      </p>
+    </div>
+
+    <button
+      class="add-task-button"
+      type="button"
+      (click)="openTaskForm()"
+    >
+      <span aria-hidden="true">+</span>
+      Add task
+    </button>
+  </header>
+
+  <section class="task-overview" aria-label="Task overview">
+    <article class="overview-card">
+      <span class="overview-label">Total tasks</span>
+      <strong class="overview-value">{{ taskService.totalTasks() }}</strong>
+      <span class="overview-hint">All your tasks</span>
+    </article>
+
+    <article class="overview-card">
+      <span class="overview-label">To do</span>
+      <strong class="overview-value">{{ taskService.pendingTasks() }}</strong>
+      <span class="overview-hint">Waiting to be completed</span>
+    </article>
+
+    <article class="overview-card">
+      <span class="overview-label">Completed</span>
+      <strong class="overview-value">{{ taskService.completedTasks() }}</strong>
+      <span class="overview-hint">Tasks you've finished</span>
+    </article>
+  </section>
+
+  @if (isTaskFormVisible()) {
+    <section class="task-form-container" aria-labelledby="task-form-title">
+      <div class="task-form-header">
+        <h2 id="task-form-title">Create a task</h2>
+        <p>Enter the details of your new task.</p>
+      </div>
+
+      <app-task-form
+        (submitted)="createTask($event)"
+        (cancelled)="closeTaskForm()"
+      />
+    </section>
+  }
+
+  <section class="task-section" aria-labelledby="pending-heading">
+    <header class="task-section-header">
+      <div>
+        <h2 id="pending-heading">To do</h2>
+        <p>Tasks that still need your attention.</p>
+      </div>
+
+      <span class="section-count">
+        {{ taskService.pendingTasks() }}
+      </span>
+    </header>
+
+    <div class="task-list">
+      @for (task of taskService.pendingTaskList(); track task.id) {
+        <article class="task-item">
+          <label class="task-checkbox">
+            <input
+              type="checkbox"
+              [checked]="task.completed"
+              [attr.aria-label]="'Mark ' + task.title + ' as completed'"
+              (change)="taskService.toggleTaskCompletion(task.id)"
+            />
+            <span class="checkmark" aria-hidden="true"></span>
+          </label>
+
+          <div class="task-details">
+            <h3>{{ task.title }}</h3>
+
+            @if (task.description) {
+              <p>{{ task.description }}</p>
+            }
+          </div>
+
+          <button
+            class="delete-task-button"
+            type="button"
+            [attr.aria-label]="'Delete task: ' + task.title"
+            (click)="taskService.deleteTask(task.id)"
+          >
+            Delete
+          </button>
+        </article>
+      } @empty {
+        <div class="section-empty-state">
+          <h3>Nothing to do</h3>
+          <p>
+            You're all caught up. Add a task whenever you have something new
+            to work on.
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="task-section" aria-labelledby="completed-heading">
+    <header class="task-section-header">
+      <div>
+        <h2 id="completed-heading">Completed</h2>
+        <p>Tasks you've successfully finished.</p>
+      </div>
+
+      <span class="section-count completed-count">
+        {{ taskService.completedTasks() }}
+      </span>
+    </header>
+
+    <div class="task-list">
+      @for (task of taskService.completedTaskList(); track task.id) {
+        <article class="task-item">
+          <label class="task-checkbox">
+            <input
+              type="checkbox"
+              [checked]="task.completed"
+              [attr.aria-label]="'Mark ' + task.title + ' as incomplete'"
+              (change)="taskService.toggleTaskCompletion(task.id)"
+            />
+            <span class="checkmark" aria-hidden="true"></span>
+          </label>
+
+          <div class="task-details">
+            <h3 class="completed">{{ task.title }}</h3>
+
+            @if (task.description) {
+              <p>{{ task.description }}</p>
+            }
+          </div>
+
+          <button
+            class="delete-task-button"
+            type="button"
+            [attr.aria-label]="'Delete task: ' + task.title"
+            (click)="taskService.deleteTask(task.id)"
+          >
+            Delete
+          </button>
+        </article>
+      } @empty {
+        <div class="section-empty-state">
+          <h3>No completed tasks yet</h3>
+          <p>
+            Tasks you mark as completed will appear here.
+          </p>
+        </div>
+      }
+    </div>
+  </section>
+</div>

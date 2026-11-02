@@ -1,0 +1,150 @@
+
+:host {
+  display: block;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field label {
+  color: var(--label-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.form-field label span {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+
+.form-field input,
+.form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.form-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: var(--muted-text);
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
+}
+
+.field-error {
+  margin: 0;
+  color: var(--error-text);
+  font-size: 12px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.cancel-button,
+.submit-button {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-button {
+  border: 1px solid var(--input-border);
+  background: var(--cancel-bg);
+  color: var(--cancel-text);
+}
+
+.cancel-button:hover {
+  background: var(--cancel-hover);
+}
+
+.submit-button {
+  border: 0;
+  background: var(--input-focus);
+  color: #ffffff;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-field input:focus-visible,
+.form-field textarea:focus-visible,
+.cancel-button:focus-visible,
+.submit-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 25%);
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --form-text: #f1f5f9;
+    --label-text: #e2e8f0;
+    --muted-text: #94a3b8;
+    --input-bg: #0f172a;
+    --input-border: #475569;
+    --input-text: #f1f5f9;
+    --input-focus: #60a5fa;
+    --cancel-bg: #1e293b;
+    --cancel-text: #e2e8f0;
+    --cancel-hover: #334155;
+    --error-text: #f87171;
+  }
+
+  .submit-button:hover:not(:disabled) {
+    background: #3b82f6;
+  }
+
+  .form-field input:focus,
+  .form-field textarea:focus {
+    box-shadow: 0 0 0 3px rgb(96 165 250 / 15%);
+  }
+}
+
+@media (max-width: 400px) {
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .cancel-button,
+  .submit-button {
+    flex: 1;
+  }
+}

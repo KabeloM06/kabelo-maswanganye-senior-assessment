@@ -1,1 +1,60 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  color-scheme: light;
+
+  --page-bg: #f8fafc;
+  --surface-bg: #ffffff;
+  --primary-text: #0f172a;
+  --muted-text: #64748b;
+  --border-color: #e2e8f0;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+
+  --label-text: #334155;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --input-focus: #2563eb;
+
+  --cancel-bg: #ffffff;
+  --cancel-text: #475569;
+  --cancel-hover: #f8fafc;
+
+  --error-text: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --page-bg: #0f172a;
+    --surface-bg: #1e293b;
+    --primary-text: #f1f5f9;
+    --muted-text: #94a3b8;
+    --border-color: #334155;
+    --accent-color: #60a5fa;
+    --accent-hover: #3b82f6;
+
+    --label-text: #e2e8f0;
+    --input-bg: #0f172a;
+    --input-border: #475569;
+    --input-text: #f1f5f9;
+    --input-focus: #60a5fa;
+
+    --cancel-bg: #1e293b;
+    --cancel-text: #e2e8f0;
+    --cancel-hover: #334155;
+
+    --error-text: #f87171;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--page-bg);
+  color: var(--primary-text);
+}

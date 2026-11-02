@@ -1,0 +1,58 @@
+
+<form class="task-form" (submit)="$event.preventDefault(); submit()">
+  <div class="form-field">
+    <label for="task-title">Task title</label>
+
+    <input
+      id="task-title"
+      type="text"
+      placeholder="e.g. Prepare project proposal"
+      [formField]="taskForm.title"
+      autofocus
+    />
+
+    @if (taskForm.title().touched() && taskForm.title().invalid()) {
+      <p class="field-error">
+        {{ taskForm.title().errors()[0].message }}
+      </p>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="task-description">Description <span>(optional)</span></label>
+
+    <textarea
+      id="task-description"
+      rows="4"
+      placeholder="Add some details about this task..."
+      [formField]="taskForm.description"
+    ></textarea>
+
+    @if (
+      taskForm.description().touched() &&
+      taskForm.description().invalid()
+    ) {
+      <p class="field-error">
+        {{ taskForm.description().errors()[0].message }}
+      </p>
+    }
+  </div>
+
+  <div class="form-actions">
+    <button
+      class="cancel-button"
+      type="button"
+      (click)="cancel()"
+    >
+      Cancel
+    </button>
+
+    <button
+      class="submit-button"
+      type="submit"
+      [disabled]="taskForm().invalid()"
+    >
+      Create task
+    </button>
+  </div>
+</form>
