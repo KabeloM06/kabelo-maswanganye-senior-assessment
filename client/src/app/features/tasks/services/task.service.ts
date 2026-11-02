@@ -1,18 +1,23 @@
 
-import { computed, Injectable, signal } from '@angular/core';
-import { Task } from '../models/task.model';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { finalize } from 'rxjs';
 
+import { Task } from '../models/task.model';
+import { TaskApiService } from '../../../core/services/task-api.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaskService {
+  private readonly taskApi = inject(TaskApiService);
+
   private readonly _tasks = signal<Task[]>([]);
 
-  // Expose read-only state to components.
   readonly tasks = this._tasks.asReadonly();
 
-  // Derived state: these values update automatically when tasks change.
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+
   readonly totalTasks = computed(() => this._tasks().length);
 
   readonly completedTasks = computed(
@@ -24,12 +29,27 @@ export class TaskService {
   );
 
   readonly pendingTaskList = computed(() =>
-  this._tasks().filter((task) => !task.completed),
-);
+    this._tasks().filter((task) => !task.completed),
+  );
 
-readonly completedTaskList = computed(() =>
-  this._tasks().filter((task) => task.completed),
-);
+  readonly completedTaskList = computed(() =>
+    this._tasks().filter((task) => task.completed),
+  );
+
+  loadTasks(): void {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    this.taskApi
+      .getTasks()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (tasks) => this._tasks.set(tasks),
+        error: () => {
+          this.errorMessage.set('Unable to load tasks. Please try again.');
+        },
+      });
+  }
 
   addTask(title: string, description: string): void {
     const trimmedTitle = title.trim();
@@ -39,34 +59,53 @@ readonly completedTaskList = computed(() =>
       return;
     }
 
-    const newTask: Task = {
-      id: this.generateId(),
-      title: trimmedTitle,
-      description: trimmedDescription,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
+    this.errorMessage.set(null);
 
-    this._tasks.update((tasks) => [...tasks, newTask]);
+    this.taskApi.createTask(trimmedTitle, trimmedDescription).subscribe({
+      next: (createdTask) => {
+        this._tasks.update((tasks) => [...tasks, createdTask]);
+      },
+      error: () => {
+        this.errorMessage.set('Unable to create the task. Please try again.');
+      },
+    });
   }
 
   toggleTaskCompletion(id: number): void {
-    this._tasks.update((tasks) =>
-      tasks.map((task) =>
-        task.id === id
-          ? { ...task, completed: !task.completed }
-          : task,
-      ),
-    );
+    const task = this._tasks().find((item) => item.id === id);
+
+    if (!task) {
+      return;
+    }
+
+    this.errorMessage.set(null);
+
+    this.taskApi.updateTaskCompletion(id, !task.completed).subscribe({
+      next: (updatedTask) => {
+        this._tasks.update((tasks) =>
+          tasks.map((item) => item.id === id ? updatedTask : item),
+        );
+      },
+      error: () => {
+        this.errorMessage.set(
+          'Unable to update the task. Please try again.',
+        );
+      },
+    });
   }
 
   deleteTask(id: number): void {
-    this._tasks.update((tasks) =>
-      tasks.filter((task) => task.id !== id),
-    );
-  }
+    this.errorMessage.set(null);
 
-  private generateId(): number {
-    return Date.now() + Math.floor(Math.random() * 1000);
+    this.taskApi.deleteTask(id).subscribe({
+      next: () => {
+        this._tasks.update((tasks) =>
+          tasks.filter((task) => task.id !== id),
+        );
+      },
+      error: () => {
+        this.errorMessage.set('Unable to delete the task. Please try again.');
+      },
+    });
   }
 }

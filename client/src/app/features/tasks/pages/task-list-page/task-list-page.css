@@ -371,3 +371,18 @@ button:focus-visible {
     border-color: #64748b;
   }
 }
+
+.task-status {
+  padding: 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.task-error {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  color: #b91c1c;
+}

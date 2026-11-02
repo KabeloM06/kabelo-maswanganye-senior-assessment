@@ -1,11 +1,49 @@
 
+import { TestBed } from '@angular/core/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { TaskService } from './task.service';
+import { Task } from '../models/task.model';
 
 describe('TaskService', () => {
   let service: TaskService;
+  let httpTesting: HttpTestingController;
+
+  const apiUrl = 'http://localhost:8080/api/tasks';
+
+  const mockTasks: Task[] = [
+    {
+      id: 1,
+      title: 'Prepare proposal',
+      description: 'Complete the project proposal',
+      completed: false,
+      createdAt: '2026-11-02T09:00:00Z',
+    },
+    {
+      id: 2,
+      title: 'Review documentation',
+      description: 'Review the technical documentation',
+      completed: true,
+      createdAt: '2026-11-02T09:30:00Z',
+    },
+  ];
 
   beforeEach(() => {
-    service = new TaskService();
+    TestBed.configureTestingModule({
+      providers: [
+        TaskService,
+        provideHttpClientTesting(),
+      ],
+    });
+
+    service = TestBed.inject(TaskService);
+    httpTesting = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpTesting.verify();
   });
 
   describe('initial state', () => {
@@ -19,162 +57,183 @@ describe('TaskService', () => {
       expect(service.completedTasks()).toBe(0);
     });
 
-    it('should use the all filter by default', () => {
-      expect(service.activeFilter()).toBe('all');
+    it('should not be loading initially', () => {
+      expect(service.isLoading()).toBe(false);
+    });
+
+    it('should have no error initially', () => {
+      expect(service.error()).toBeNull();
+    });
+  });
+
+  describe('loadTasks', () => {
+    it('should retrieve tasks from the backend', () => {
+      service.loadTasks();
+
+      const request = httpTesting.expectOne(apiUrl);
+
+      expect(request.request.method).toBe('GET');
+      expect(service.isLoading()).toBe(true);
+
+      request.flush(mockTasks);
+
+      expect(service.tasks()).toEqual(mockTasks);
+      expect(service.isLoading()).toBe(false);
+    });
+
+    it('should update task counts after loading', () => {
+      service.loadTasks();
+      httpTesting.expectOne(apiUrl).flush(mockTasks);
+
+      expect(service.totalTasks()).toBe(2);
+      expect(service.pendingTasks()).toBe(1);
+      expect(service.completedTasks()).toBe(1);
+    });
+
+    it('should expose an error when loading fails', () => {
+      service.loadTasks();
+
+      httpTesting.expectOne(apiUrl).flush(
+        'Server error',
+        { status: 500, statusText: 'Internal Server Error' },
+      );
+
+      expect(service.error()).toBe(
+        'Unable to load tasks. Please try again.',
+      );
+      expect(service.isLoading()).toBe(false);
     });
   });
 
   describe('addTask', () => {
-    it('should add a task with the supplied details', () => {
+    it('should create a task through the backend', () => {
       service.addTask('Prepare proposal', 'Complete the project proposal');
 
-      expect(service.tasks().length).toBe(1);
-      expect(service.tasks()[0]).toEqual(
-        jasmine.objectContaining({
-          title: 'Prepare proposal',
-          description: 'Complete the project proposal',
-          completed: false,
-        }),
-      );
+      const request = httpTesting.expectOne(apiUrl);
+
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual({
+        title: 'Prepare proposal',
+        description: 'Complete the project proposal',
+      });
+
+      request.flush(mockTasks[0]);
+
+      expect(service.tasks()).toEqual([mockTasks[0]]);
     });
 
-    it('should trim whitespace from task details', () => {
+    it('should trim whitespace before creating a task', () => {
       service.addTask('  Prepare proposal  ', '  Project details  ');
 
-      expect(service.tasks()[0].title).toBe('Prepare proposal');
-      expect(service.tasks()[0].description).toBe('Project details');
+      const request = httpTesting.expectOne(apiUrl);
+
+      expect(request.request.body).toEqual({
+        title: 'Prepare proposal',
+        description: 'Project details',
+      });
+
+      request.flush(mockTasks[0]);
     });
 
-    it('should not add a task with an empty title', () => {
+    it('should not send a request when the title is empty', () => {
       service.addTask('', 'Some description');
 
-      expect(service.tasks().length).toBe(0);
+      httpTesting.expectNone(apiUrl);
+      expect(service.tasks()).toEqual([]);
     });
 
-    it('should not add a task with a whitespace-only title', () => {
-      service.addTask('   ', 'Some description');
-
-      expect(service.tasks().length).toBe(0);
-    });
-
-    it('should allow an empty description', () => {
+    it('should expose an error when creation fails', () => {
       service.addTask('Prepare proposal', '');
 
-      expect(service.tasks()[0].description).toBe('');
-    });
-  });
+      httpTesting.expectOne(apiUrl).flush(
+        'Server error',
+        { status: 500, statusText: 'Internal Server Error' },
+      );
 
-  describe('task counts', () => {
-    it('should calculate task counts correctly', () => {
-      service.addTask('Task one', '');
-      service.addTask('Task two', '');
-      service.addTask('Task three', '');
-
-      service.toggleTaskCompletion(service.tasks()[0].id);
-      service.toggleTaskCompletion(service.tasks()[1].id);
-
-      expect(service.totalTasks()).toBe(3);
-      expect(service.completedTasks()).toBe(2);
-      expect(service.pendingTasks()).toBe(1);
-    });
-
-    it('should update counts when a task is deleted', () => {
-      service.addTask('Task one', '');
-      service.addTask('Task two', '');
-
-      service.deleteTask(service.tasks()[0].id);
-
-      expect(service.totalTasks()).toBe(1);
-      expect(service.pendingTasks()).toBe(1);
+      expect(service.error()).toBe(
+        'Unable to create the task. Please try again.',
+      );
     });
   });
 
   describe('toggleTaskCompletion', () => {
-    it('should mark a pending task as completed', () => {
-      service.addTask('Prepare proposal', '');
-      const taskId = service.tasks()[0].id;
+    beforeEach(() => {
+      service.loadTasks();
+      httpTesting.expectOne(apiUrl).flush(mockTasks);
+    });
 
-      service.toggleTaskCompletion(taskId);
+    it('should update completion through the backend', () => {
+      service.toggleTaskCompletion(1);
+
+      const request = httpTesting.expectOne(
+        `${apiUrl}/1/completion`,
+      );
+
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toEqual({ completed: true });
+
+      const updatedTask = {
+        ...mockTasks[0],
+        completed: true,
+      };
+
+      request.flush(updatedTask);
 
       expect(service.tasks()[0].completed).toBe(true);
     });
 
-    it('should allow a completed task to be marked as pending again', () => {
-      service.addTask('Prepare proposal', '');
-      const taskId = service.tasks()[0].id;
+    it('should not send a request for a task that does not exist', () => {
+      service.toggleTaskCompletion(-1);
 
-      service.toggleTaskCompletion(taskId);
-      service.toggleTaskCompletion(taskId);
-
-      expect(service.tasks()[0].completed).toBe(false);
+      httpTesting.expectNone(`${apiUrl}/-1/completion`);
     });
 
-    it('should not change other tasks when toggling completion', () => {
-      service.addTask('Task one', '');
-      service.addTask('Task two', '');
+    it('should expose an error when updating fails', () => {
+      service.toggleTaskCompletion(1);
 
-      const firstTaskId = service.tasks()[0].id;
+      httpTesting.expectOne(
+        `${apiUrl}/1/completion`,
+      ).flush(
+        'Server error',
+        { status: 500, statusText: 'Internal Server Error' },
+      );
 
-      service.toggleTaskCompletion(firstTaskId);
-
-      expect(service.tasks()[0].completed).toBe(true);
-      expect(service.tasks()[1].completed).toBe(false);
+      expect(service.error()).toBe(
+        'Unable to update the task. Please try again.',
+      );
     });
   });
 
   describe('deleteTask', () => {
-    it('should remove the task with the supplied ID', () => {
-      service.addTask('Task one', '');
-      service.addTask('Task two', '');
-
-      const taskId = service.tasks()[0].id;
-
-      service.deleteTask(taskId);
-
-      expect(service.tasks().length).toBe(1);
-      expect(service.tasks()[0].title).toBe('Task two');
-    });
-
-    it('should leave the task list unchanged when the ID does not exist', () => {
-      service.addTask('Task one', '');
-
-      service.deleteTask(-1);
-
-      expect(service.tasks().length).toBe(1);
-    });
-  });
-
-  describe('setFilter', () => {
     beforeEach(() => {
-      service.addTask('Pending task', '');
-      service.addTask('Completed task', '');
-      service.toggleTaskCompletion(service.tasks()[1].id);
+      service.loadTasks();
+      httpTesting.expectOne(apiUrl).flush(mockTasks);
     });
 
-    it('should return all tasks when the all filter is selected', () => {
-      service.setFilter('all');
+    it('should delete a task through the backend', () => {
+      service.deleteTask(1);
 
-      expect(service.filteredTasks().length).toBe(2);
+      const request = httpTesting.expectOne(`${apiUrl}/1`);
+
+      expect(request.request.method).toBe('DELETE');
+
+      request.flush(null);
+
+      expect(service.tasks()).toEqual([mockTasks[1]]);
+      expect(service.totalTasks()).toBe(1);
     });
 
-    it('should return only pending tasks when the pending filter is selected', () => {
-      service.setFilter('pending');
+    it('should expose an error when deletion fails', () => {
+      service.deleteTask(1);
 
-      expect(service.filteredTasks().length).toBe(1);
-      expect(service.filteredTasks()[0].title).toBe('Pending task');
-    });
+      httpTesting.expectOne(`${apiUrl}/1`).flush(
+        'Server error',
+        { status: 500, statusText: 'Internal Server Error' },
+      );
 
-    it('should return only completed tasks when the completed filter is selected', () => {
-      service.setFilter('completed');
-
-      expect(service.filteredTasks().length).toBe(1);
-      expect(service.filteredTasks()[0].title).toBe('Completed task');
-    });
-
-    it('should not modify the original task collection when filtering', () => {
-      service.setFilter('completed');
-
-      expect(service.tasks().length).toBe(2);
+      expect(service.error()).toBe(
+        'Unable to delete the task. Please try again.',
+      );
     });
   });
 });

@@ -1,1 +1,147 @@
-<p>weather-page works!</p>
+
+<main class="weather-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">YOUR LOCAL FORECAST</p>
+      <h1>Weather</h1>
+      <p class="page-description">
+        Current conditions and daily sunlight information.
+      </p>
+    </div>
+  </header>
+  
+<section class="location-search" aria-label="Search for a city">
+  <label for="location-search">Search for a location</label>
+
+  <div class="search-input-wrapper">
+    <span class="search-icon" aria-hidden="true">⌕</span>
+
+    <input
+      id="location-search"
+      type="search"
+      placeholder="Enter a city, e.g. Johannesburg"
+      autocomplete="off"
+      [value]="searchQuery()"
+      (input)="onSearchInput($any($event.target).value)"
+      aria-describedby="search-hint"
+      aria-controls="location-results"
+      [attr.aria-expanded]="searchResults().length > 0"
+    />
+
+    @if (isSearching()) {
+      <span class="search-status">Searching...</span>
+    }
+  </div>
+
+  <p id="search-hint" class="search-hint">
+    Enter at least two characters to search for a city.
+  </p>
+
+  @if (searchError()) {
+    <p class="search-error" role="alert">{{ searchError() }}</p>
+  }
+
+  @if (searchResults().length > 0) {
+    <ul id="location-results" class="search-results">
+      @for (location of searchResults(); track location.latitude + ',' + location.longitude) {
+        <li>
+          <button
+            type="button"
+            class="search-result"
+            (click)="selectLocation(location)"
+          >
+            <span class="result-name">{{ location.name }}</span>
+            <span class="result-details">
+              {{ location.region }}, {{ location.country }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else if (
+    searchQuery().trim().length >= 2 &&
+    !isSearching() &&
+    !searchError()
+  ) {
+    <p class="no-results">No matching locations found.</p>
+  }
+</section>
+
+
+  @if (isLoading()) {
+    <section class="loading-card" aria-live="polite">
+      <div class="loading-spinner"></div>
+      <p>Loading weather information...</p>
+    </section>
+  } @else if (error()) {
+    <section class="error-card" role="alert">
+      <div class="error-icon">!</div>
+      <div>
+        <h2>Weather unavailable</h2>
+        <p>{{ error() }}</p>
+      </div>
+    </section>
+  } @else if (weather(); as currentWeather) {
+    <section class="weather-hero">
+      <div class="weather-location">
+        <div>
+          <p class="eyebrow">CURRENT LOCATION</p>
+          <h2>{{ currentWeather.location }}</h2>
+          <p>
+            {{ currentWeather.region }}, {{ currentWeather.country }}
+          </p>
+        </div>
+
+        <span class="location-icon" aria-hidden="true">⌖</span>
+      </div>
+
+      <div class="temperature-section">
+        <div class="sun-icon" aria-hidden="true">☀</div>
+
+        <div>
+          <p class="temperature">
+            {{ currentWeather.temperatureCelsius | number:'1.0-1' }}°
+          </p>
+          <p class="temperature-label">Current temperature</p>
+        </div>
+      </div>
+
+      <div class="weather-footer">
+        <span>Local time</span>
+        <strong>{{ currentWeather.localTime }}</strong>
+      </div>
+    </section>
+
+    <section class="sunlight-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">DAYLIGHT</p>
+          <h2>Sunrise & sunset</h2>
+        </div>
+        <p class="section-description">
+          Today's sunlight schedule
+        </p>
+      </div>
+
+      <div class="sunlight-grid">
+        <article class="sunlight-card sunrise-card">
+          <div class="sunlight-icon">🌅</div>
+          <div>
+            <p class="sunlight-label">Sunrise</p>
+            <h3>{{ currentWeather.sunrise }}</h3>
+            <p class="sunlight-description">The sun rises</p>
+          </div>
+        </article>
+
+        <article class="sunlight-card sunset-card">
+          <div class="sunlight-icon">🌇</div>
+          <div>
+            <p class="sunlight-label">Sunset</p>
+            <h3>{{ currentWeather.sunset }}</h3>
+            <p class="sunlight-description">The sun sets</p>
+          </div>
+        </article>
+      </div>
+    </section>
+  }
+</main>

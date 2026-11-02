@@ -38,6 +38,18 @@
       <span class="overview-hint">Tasks you've finished</span>
     </article>
   </section>
+  @if (taskService.isLoading()) {
+  <p class="status-message" role="status">Loading tasks...</p>
+}
+
+@if (taskService.errorMessage()) {
+  <p class="error-message" role="alert">
+    {{ taskService.errorMessage() }}
+    <button type="button" (click)="taskService.loadTasks()">
+      Retry
+    </button>
+  </p>
+}
 
   @if (isTaskFormVisible()) {
     <section class="task-form-container" aria-labelledby="task-form-title">
@@ -107,6 +119,17 @@
     </div>
   </section>
 
+  @if (taskService.isLoading()) {
+  <div class="task-status" role="status">
+    Loading your tasks...
+  </div>
+}
+
+@if (taskService.errorMessage()) {
+  <div class="task-error" role="alert">
+    {{ taskService.errorMessage() }}
+  </div>
+}
   <section class="task-section" aria-labelledby="completed-heading">
     <header class="task-section-header">
       <div>

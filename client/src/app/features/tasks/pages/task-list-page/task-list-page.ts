@@ -1,5 +1,6 @@
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
+
 import { TaskService } from '../../services/task.service';
 import { TaskForm } from '../../components/task-form/task-form';
 
@@ -9,10 +10,14 @@ import { TaskForm } from '../../components/task-form/task-form';
   templateUrl: './task-list-page.html',
   styleUrl: './task-list-page.css',
 })
-export class TaskListPage {
+export class TaskListPage implements OnInit {
   protected readonly taskService = inject(TaskService);
 
   protected readonly isTaskFormVisible = signal(false);
+
+  ngOnInit(): void {
+    this.taskService.loadTasks();
+  }
 
   protected openTaskForm(): void {
     this.isTaskFormVisible.set(true);
